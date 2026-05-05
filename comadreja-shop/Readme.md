@@ -1,26 +1,27 @@
-#  Comadreja Shop - Entorno con Docker
+#  Comadreja Shop - Setup de Desarrollo
 
-##  Descripción
+## Descripción
 
-Este proyecto configura automáticamente un entorno de desarrollo para **Comadreja Shop** utilizando Docker.
+Este proyecto configura automáticamente el entorno de desarrollo para **Comadreja Shop** usando Docker.
 
 Incluye:
 
-* Laravel (instalado automáticamente)
-* MySQL con persistencia (volumen)
-* Red Docker para comunicación
-* Panel administrativo con Filament
+* Laravel 12
+* MySQL con persistencia
+* Filament (panel admin)
+* Entorno listo para trabajar en equipo
 
 ---
 
-##  Requisitos
+#  Requisitos
 
-Antes de comenzar, asegúrate de tener instalado:
+Antes de empezar necesitas:
 
-* Docker
-* Git
+* Docker instalado
+* Git instalado
+* VS Code (recomendado)
 
-Verificar instalación:
+Verifica:
 
 ```bash
 docker --version
@@ -29,9 +30,9 @@ git --version
 
 ---
 
-##  Instalación paso a paso
+#  Instalación (IMPORTANTE seguir pasos)
 
-### 1. Clonar el repositorio
+## 1. Clonar repositorio
 
 ```bash
 git clone https://github.com/TU-USUARIO/comadreja-shop.git
@@ -40,7 +41,7 @@ cd comadreja-shop
 
 ---
 
-### 2. Dar permisos al script
+## 2. Dar permisos al script
 
 ```bash
 chmod +x setup.sh
@@ -48,50 +49,140 @@ chmod +x setup.sh
 
 ---
 
-### 3. Ejecutar instalación automática
+## 3. Ejecutar setup inicial
 
 ```bash
 ./setup.sh
 ```
 
- Este proceso puede tardar unos minutos porque:
+ Esto puede tardar varios minutos porque:
 
-* Se construye la imagen Docker
-* Se descarga Laravel
+* Se construye Docker
+* Se instala Laravel
 * Se instala Filament
-* Se configuran base de datos y migraciones
+* Se configura MySQL
 
 ---
 
-##  Acceso al sistema
+#  4. PASO OBLIGATORIO (NO SALTAR)
 
-Una vez terminado:
-
-* Aplicación:
-  http://localhost:8000
-
-* Panel de administración (Filament):
-  http://localhost:8000/admin
-
----
-
-##  Crear usuario administrador
-
-Después de la instalación, ejecutar:
+Después del setup, ejecutar:
 
 ```bash
-docker exec -it comadreja_app php artisan make:filament-user
+docker cp comadreja_app:/var/www/html ./src
 ```
 
-Ingresar:
-
-* Nombre
-* Correo
-* Contraseña
+ Esto trae el código a tu máquina para poder editarlo
 
 ---
 
-##  Comandos útiles
+#  5. Levantar contenedor con volumen (CLAVE)
+
+Ejecuta en **una sola línea**:
+
+```bash
+docker rm -f comadreja_app && docker run -d --name comadreja_app --network comadreja_net -p 8000:80 -v "$(pwd -W)/src:/var/www/html" comadreja_app
+```
+
+---
+
+#  Acceso
+
+* App: http://localhost:8000
+* Admin (Filament): http://localhost:8000/admin
+
+---
+
+#  Crear usuario admin
+
+```bash
+winpty docker exec -it comadreja_app php artisan make:filament-user
+```
+
+---
+
+#  Cómo trabajar en el proyecto
+
+## Abrir en VS Code
+
+```bash
+code .
+```
+
+Trabaja dentro de:
+
+```bash
+src/
+```
+
+---
+
+##  Prueba rápida
+
+Editar:
+
+```bash
+src/routes/web.php
+```
+
+Cambiar:
+
+```php
+return "Funciona ";
+```
+
+Guardar y recargar navegador.
+
+---
+
+# 🔄 Flujo de trabajo en equipo
+
+## 1. Siempre actualizar antes de trabajar
+
+```bash
+git checkout develop
+git pull origin develop
+```
+
+---
+
+## 2. Crear tu rama
+
+```bash
+git checkout -b feature/lo-que-haras
+```
+
+---
+
+## 3. Guardar cambios
+
+```bash
+git add .
+git commit -m "RF-XXX descripcion"
+git push origin feature/lo-que-haras
+```
+
+---
+
+## 4. Crear Pull Request a `develop`
+
+---
+
+#  Reglas IMPORTANTES
+
+ NO subir:
+
+* `.env`
+* `vendor`
+* base de datos
+
+NO trabajar en `main`
+
+Usar ramas `feature/*`
+
+---
+
+#  Comandos útiles
 
 Ver contenedores:
 
@@ -99,31 +190,39 @@ Ver contenedores:
 docker ps
 ```
 
-Entrar al contenedor:
+Reiniciar app:
 
 ```bash
-docker exec -it comadreja_app bash
+docker restart comadreja_app
 ```
 
-Detener contenedores:
+Limpiar cache Laravel:
 
 ```bash
-docker stop comadreja_app comadreja_db
-```
-
-Eliminar contenedores:
-
-```bash
-docker rm comadreja_app comadreja_db
+winpty docker exec -it comadreja_app php artisan optimize:clear
 ```
 
 ---
 
-##  Solución de problemas
+#  Problemas comunes
 
-###  No carga la página
+## No se reflejan cambios
 
-Verifica contenedores:
+```bash
+docker restart comadreja_app
+```
+
+---
+
+## Error de permisos
+
+```bash
+winpty docker exec -it comadreja_app chmod -R 775 storage bootstrap/cache
+```
+
+---
+
+## No carga la página
 
 ```bash
 docker ps
@@ -131,35 +230,15 @@ docker ps
 
 ---
 
-###  Error de base de datos
+#  Notas
 
-Espera unos segundos y reinicia:
-
-```bash
-docker restart comadreja_db
-```
+* Todo el código se edita en `src/`
+* Docker usa esa carpeta en tiempo real
+* No necesitas instalar Laravel manualmente
 
 ---
 
-###  Error de permisos
-
-Dentro del contenedor:
-
-```bash
-chmod -R 777 storage bootstrap/cache
-```
-
----
-
-##  Notas
-
-* No es necesario instalar Laravel manualmente
-* Todo se configura automáticamente con `setup.sh`
-* La base de datos usa volumen, por lo que los datos no se pierden
-
----
-
-##  Equipo
+#  Equipo
 
 * Adan Ballesillo Velázquez (DevOps)
 * Nayeli Hernandez Ramirez (DBA)
@@ -168,7 +247,7 @@ chmod -R 777 storage bootstrap/cache
 
 ---
 
-##  Proyecto académico
+#  Proyecto académico
 
 Tecnológico Superior de Jalisco
 Materia: DevOps
