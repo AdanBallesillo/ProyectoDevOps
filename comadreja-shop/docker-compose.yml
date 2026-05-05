@@ -1,0 +1,32 @@
+services:
+  app:
+    build: .
+    container_name: comadreja_app
+    ports:
+      - "8000:80"
+    volumes:
+      - ./src:/var/www/html
+    networks:
+      - comadreja_net
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8
+    container_name: comadreja_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: comadreja
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - comadreja_net
+
+networks:
+  comadreja_net:
+
+volumes:
+  db_data:
