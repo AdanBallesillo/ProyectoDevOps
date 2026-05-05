@@ -23,6 +23,8 @@ Antes de empezar necesitas:
 
 Verifica:
 
+# En tu consola de Git Bash
+
 ```bash
 docker --version
 git --version
